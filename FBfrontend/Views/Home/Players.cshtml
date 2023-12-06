@@ -1,0 +1,108 @@
+﻿@{
+    ViewData["Title"] = "Players";
+}
+<h1>@ViewData["Title"]</h1>
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Second Name</th>
+            <th>Sex</th>
+            <th>Date of Birth</th>
+            <th>Team ID</th>
+            <th>Country</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="playersTableBody"></tbody>
+</table>
+
+<script>
+    function toggleEdit(row) {
+        const inputs = row.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.disabled = !input.disabled;
+        });
+    }
+
+    function updatePlayer(playerId, row) {
+        const inputs = row.querySelectorAll('input');
+        const updatedInfo = {
+            id: playerId,
+            Name: inputs[0].value,
+            SecondName: inputs[1].value,
+            Sex: inputs[2].value,
+            DateOfBirth: inputs[3].value,
+            TeamId: inputs[4].value,
+            Country: inputs[5].value
+        };
+
+        fetch(`https://localhost:7048/api/Players/${playerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedInfo)
+        })
+            .then(response => response.json())
+            .then(updatedPlayers => {
+                console.log('Player updated:', updatedPlayers);
+                toggleEdit(row);
+                const updateButton = row.querySelector('button');
+                updateButton.textContent = 'Update';
+            })
+            .catch(error => {
+                console.error('Error updating player:', error);
+            });
+    }
+
+    function handleUpdateClick(playerId, row) {
+        const updateButton = row.querySelector('button');
+        if (updateButton.textContent === 'Update') {
+            toggleEdit(row);
+            updateButton.textContent = 'Save';
+        } else {
+            updatePlayer(playerId, row);
+        }
+    }
+
+    fetch('https://localhost:7048/api/Players')
+        .then(response => response.json())
+        .then(players => {
+            const playersTableBody = document.getElementById('playersTableBody');
+
+            players.forEach(player => {
+                const row = document.createElement('tr');
+
+                Object.keys(player).forEach((key, index) => {
+                    const cell = document.createElement('td');
+                    if (key !== 'id') {
+                        const inputField = document.createElement('input');
+                        inputField.value = player[key];
+                        inputField.disabled = true;
+                        cell.appendChild(inputField);
+                    } else {
+                        cell.textContent = player[key];
+                    }
+                    row.appendChild(cell);
+                });
+
+                const actionsCell = document.createElement('td');
+                const updateButton = document.createElement('button');
+                updateButton.textContent = 'Update';
+                updateButton.onclick = function () {
+                    handleUpdateClick(player.id, row);
+                };
+                actionsCell.appendChild(updateButton);
+                row.appendChild(actionsCell);
+
+                playersTableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching players:', error);
+        });
+</script>

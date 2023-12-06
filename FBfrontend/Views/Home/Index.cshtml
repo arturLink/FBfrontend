@@ -1,0 +1,126 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<h2>Add new Player</h2>
+<form id="addPlayerForm">
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" name="firstName" required><br><br>
+
+    <label for="surname">Surname:</label>
+    <input type="text" id="surname" name="surname" required><br><br>
+
+    <label for="gender">Gender:</label>
+    <select id="gender" name="gender">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+    </select><br><br>
+
+    <label for="dob">Date of Birth:</label>
+    <input type="text" id="dob" name="dob" required><br><br>
+
+    <!-- Fetch and populate existing teams -->
+    <label for="teamName">Team Name:</label>
+    <select id="teamName" name="teamName">
+        <!-- Teams will be fetched and populated dynamically using JavaScript -->
+    </select><br><br>
+
+    <label for="country">Country:</label>
+    <select id="country" name="country">
+        <option value="Estonia">Estonia</option>
+        <option value="USA">USA</option>
+        <option value="Italy">Italy</option>
+    </select><br><br>
+
+    <input type="submit" value="Add Player">
+</form>
+
+
+<br />
+<h2>Add new Team</h2>
+<!-- Form to add a new team -->
+<form id="addTeamForm">
+    <label for="newTeamName">New Team Name:</label>
+    <input type="text" id="newTeamName" name="newTeamName" required><br><br> <!-- Input field to add new team -->
+
+    <input type="submit" value="Add New Team">
+</form>
+
+<script>
+    // Fetch existing teams and populate the team dropdown
+    fetch('https://localhost:7048/api/Teams')
+        .then(response => response.json())
+        .then(teams => {
+            const teamSelect = document.getElementById('teamName');
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.id; // Adjust based on your team's ID property
+                option.textContent = team.name; // Adjust based on your team's name property
+                teamSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching teams:', error);
+        });
+
+    // Add a new player
+    document.getElementById('addPlayerForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('firstName').value;
+        const surname = document.getElementById('surname').value;
+        const gender = document.getElementById('gender').value;
+        const dob = document.getElementById('dob').value;
+        const teamName = document.getElementById('teamName').value;
+        const country = document.getElementById('country').value;
+
+        const playerData = {
+            Name: firstName,
+            SecondName: surname,
+            Sex: gender,
+            DateOfBirth: dob,
+            TeamId: teamName,
+            Country: country
+        };
+
+
+        fetch('https://localhost:7048/api/Players/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(playerData)
+        })
+            .then(response => response.json())
+            .then(players => {
+                console.log('Updated Players:', players);
+                // Handle the updated list of players, if needed
+            })
+            .catch(error => {
+                console.error('Error adding player:', error);
+            });
+    });
+
+    // Add a new team
+    document.getElementById('addTeamForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const newTeamName = document.getElementById('newTeamName').value;
+
+        fetch('https://localhost:7048/api/Teams/addTeam', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: newTeamName })
+        })
+            .then(response => response.json())
+            .then(teams => {
+                console.log('Updated Teams:', teams);
+                // Handle the updated list of teams, if needed
+            })
+            .catch(error => {
+                console.error('Error adding team:', error);
+            });
+    });
+</script>
